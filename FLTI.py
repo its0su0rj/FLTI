@@ -1,4 +1,86 @@
 import streamlit as st
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+import joblib
+import nltk
+from nltk.corpus import stopwords
+
+import numpy as np
+from PIL import Image
+import pickle
+        
+from streamlit_option_menu import option_menu
+
+
+
+
+
+
+def predict_salary(loaded_model, input_features):
+    loaded_model_salary = pickle.load(open('linear_regression.pkl', 'rb'))
+
+    try:
+        # Convert input features to numeric values
+        input_features = [float(feature) for feature in input_features]
+    except ValueError:
+        return "Please enter valid numeric values for all features."
+
+    input_features = np.array(input_features).reshape(1, -1)
+
+    # Predict the salary using the loaded model
+    predicted_salary = loaded_model.predict(input_features)[0]
+
+    return predicted_salary
+
+
+       
+def diabetes_prediction(input_data):
+    
+    loaded_model_diabetes = pickle.load(open('trained_model.sav', 'rb'))
+
+        # changing the input_data to numpy array
+    input_data_as_numpy_array = np.asarray(input_data)
+
+        # reshape the array as we are predicting for one instance
+    input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
+
+    prediction = loaded_model_diabetes.predict(input_data_reshaped)
+
+    if prediction[0] == 0:
+        return 'The person is not diabetic'
+    else:
+        return 'The person is diabetic'
+
+
+        
+
+        # Load the trained k-NN model and scaler
+model = joblib.load('admission_probability_model.joblib')
+scaler = joblib.load('scaler.joblib')
+
+        
+
+        # Load the trained model
+model = joblib.load('image.joblib')
+
+
+        # Load the trained Decision Tree model
+model = joblib.load('decisiontree.joblib')
+        #model = joblib.load("C:/Users/sujee/Downloads/loanapproval/decisiontree.joblib")   # Replace with the correct path to your trained model
+
+
+
+        # Set the NLTK data path
+        #nltk.data.path.append('C:/Users/sujee/Downloads/nltk_data')
+nltk.data.path.append('nltk_data')
+
+        # Download NLTK resources
+nltk.download('stopwords')
+nltk.download('punkt')
+
+        # Load the trained model
+model = joblib.load('email_detection_model.joblib')
+
 
 # Function for ML Model Page
 def ml_model_page():
@@ -9,15 +91,8 @@ def ml_model_page():
         st.write("You are on the Loan Approval Prediction page.")
         # Add specific content for Loan Approval Prediction
         #loan approval model
-        import streamlit as st
-        import pandas as pd
-        from sklearn.preprocessing import LabelEncoder
-        import joblib
-
-        # Load the trained Decision Tree model
-        model = joblib.load('decisiontree.joblib')
-        #model = joblib.load("C:/Users/sujee/Downloads/loanapproval/decisiontree.joblib")   # Replace with the correct path to your trained model
-
+        
+        
         # Streamlit UI
         st.title("Loan Approval Prediction")
 
@@ -73,24 +148,7 @@ def ml_model_page():
         st.write("You are on the Email Spam Detection page.")
         # Add specific content for Email Spam Detection
         #email spam prediction model
-        import streamlit as st
-
-        import joblib
-        import nltk
-        from nltk.corpus import stopwords
-
-        # Set the NLTK data path
-        #nltk.data.path.append('C:/Users/sujee/Downloads/nltk_data')
-        nltk.data.path.append('nltk_data')
-
-        # Download NLTK resources
-        nltk.download('stopwords')
-        nltk.download('punkt')
-
-        # Load the trained model
-        model = joblib.load('email_detection_model.joblib')
-        #model = joblib.load("C:/Users/sujee/Downloads/email_detection_model.joblib")
-
+        
         # Streamlit UI
         st.title("Email Spam Detection")
 
@@ -113,13 +171,7 @@ def ml_model_page():
         st.write("You are on the Image Compression page.")
         # Add specific content for Image Compression
         #image compression model
-        import streamlit as st
-        import numpy as np
-        from PIL import Image
-        import joblib
-
-        # Load the trained model
-        model = joblib.load('image.joblib')
+        
 
         # Title
         st.title('Image Compression')
@@ -146,15 +198,7 @@ def ml_model_page():
         st.write("You are on the College Admission Probability page.")
         # Add specific content for College Admission Probability
         #college admission probability model
-        import streamlit as st
-        import pandas as pd
-        from sklearn.preprocessing import StandardScaler
-        import joblib
-
-        # Load the trained k-NN model and scaler
-        model = joblib.load('admission_probability_model.joblib')
-        scaler = joblib.load('scaler.joblib')
-
+       
         # Streamlit UI
         st.title("College Admission Probability Prediction")
 
@@ -201,117 +245,61 @@ def ml_model_page():
         st.write("You are on the Diabetes Prediction page.")
         # Add specific content for Diabetes Prediction
         #diabetes prediction model
-        import pickle
-        import numpy as np
-        import streamlit as st
-        from streamlit_option_menu import option_menu
-        from diabetes_prediction_model import diabetes_prediction
+        st.title('Diabetes prediction using SVM')
 
-        def diabetes_prediction(input_data):
-            # loading the saved model
-            loaded_model_diabetes = pickle.load(open('trained_model.sav', 'rb'))
+        # getting the input data from user
+        Pregnancies = st.text_input('Number of Pregnancies')
+        Glucose = st.text_input('Glucose level')
+        BloodPressure = st.text_input('Blood pressure value')
+        SkinThickness = st.text_input('Skin thickness value')
+        Insulin = st.text_input('Insulin level')
+        BMI = st.text_input('BMI value')
+        DiabetesPedigreeFunction = st.text_input('Diabetes Pedigree Function value')
+        Age = st.text_input('Age value')
+        
+        # code for prediction
+        diagnosis = ''
+        
+        # creating a button for prediction
+        if st.button('Diabetes test result'):
+            diagnosis = diabetes_prediction([Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI,
+                                              DiabetesPedigreeFunction, Age])
 
-            # changing the input_data to numpy array
-            input_data_as_numpy_array = np.asarray(input_data)
+        
+        st.success(diagnosis)
 
-            # reshape the array as we are predicting for one instance
-            input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
-
-            prediction = loaded_model_diabetes.predict(input_data_reshaped)
-
-            if prediction[0] == 0:
-                return 'The person is not diabetic'
-            else:
-                return 'The person is diabetic'
-
-        def main():
-            with st.sidebar:
-                selected = option_menu('DIABETES PREDICTION', ['Diabetes Prediction'], icons=['activity'], default_index=0)
-
-            if selected == 'Diabetes Prediction':
-                st.title('Diabetes prediction using SVM')
-
-                # getting the input data from user
-                Pregnancies = st.text_input('Number of Pregnancies')
-                Glucose = st.text_input('Glucose level')
-                BloodPressure = st.text_input('Blood pressure value')
-                SkinThickness = st.text_input('Skin thickness value')
-                Insulin = st.text_input('Insulin level')
-                BMI = st.text_input('BMI value')
-                DiabetesPedigreeFunction = st.text_input('Diabetes Pedigree Function value')
-                Age = st.text_input('Age value')
-
-                # code for prediction
-                diagnosis = ''
-
-                # creating a button for prediction
-                if st.button('Diabetes test result'):
-                    diagnosis = diabetes_prediction([Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI,
-                                                      DiabetesPedigreeFunction, Age])
-
-                st.success(diagnosis)
-
-        if __name__ == '__main__':
-            main()
+        
         
 
     elif selected_tab == "Salary Prediction":
         st.write("You are on the Salary Prediction page.")
         # Add specific content for Salary Prediction
         #salary prediction model
-        import streamlit as st
-        from streamlit_option_menu import option_menu
-        from salary_prediction_model import predict_salary
-        import pickle
-        import numpy as np
+        
+        loaded_model_salary = pickle.load(open('linear_regression.pkl', 'rb'))
 
+            
+        st.title('Salary CTC prediction using multiple linear regression')
 
-        def predict_salary(loaded_model, input_features):
-            try:
-                # Convert input features to numeric values
-                input_features = [float(feature) for feature in input_features]
-            except ValueError:
-                return "Please enter valid numeric values for all features."
+        # getting the input data from the user
+        grade = st.text_input('Grade (1-10)')
+        softskill = st.text_input('Soft skill (1-10)')
+        problemsolvingskill = st.text_input('Problem-solving skill (1-10)')
+        meditationandyoga = st.text_input('Meditation and Yoga (1-10)')
+        discipline = st.text_input('Discipline level (1-10)')
+        strongcommandinoneskill = st.text_input('Strong command in one skill (1-10)')
 
-            input_features = np.array(input_features).reshape(1, -1)
+        # code for prediction
+        diagnosis = ''
 
-            # Predict the salary using the loaded model
-            predicted_salary = loaded_model.predict(input_features)[0]
+        # creating a button for prediction
+        if st.button('Predict Salary CTC in Lacs'):
+            new_features = [grade, softskill, problemsolvingskill, meditationandyoga, discipline, strongcommandinoneskill]
+            diagnosis = predict_salary(loaded_model_salary, new_features)
 
-            return predicted_salary
+        st.success(f'Predicted Salary CTC: {float(diagnosis):.2f} Lacs' if isinstance(diagnosis, (int, float)) else diagnosis)
 
-        def main():
-            # loading the saved model for salary prediction
-            loaded_model_salary = pickle.load(open('linear_regression.pkl', 'rb'))
-
-            with st.sidebar:
-                selected = option_menu('SALARY PREDICTION', ['Salary Prediction'], icons=['currency-rupee'], default_index=0)
-
-            if selected == 'Salary Prediction':
-                st.title('Salary CTC prediction using multiple linear regression')
-
-                # getting the input data from the user
-                grade = st.text_input('Grade (1-10)')
-                softskill = st.text_input('Soft skill (1-10)')
-                problemsolvingskill = st.text_input('Problem-solving skill (1-10)')
-                meditationandyoga = st.text_input('Meditation and Yoga (1-10)')
-                discipline = st.text_input('Discipline level (1-10)')
-                strongcommandinoneskill = st.text_input('Strong command in one skill (1-10)')
-
-                # code for prediction
-                diagnosis = ''
-
-                # creating a button for prediction
-                if st.button('Predict Salary CTC in Lacs'):
-                    new_features = [grade, softskill, problemsolvingskill, meditationandyoga, discipline, strongcommandinoneskill]
-                    diagnosis = predict_salary(loaded_model_salary, new_features)
-
-                st.success(f'Predicted Salary CTC: {float(diagnosis):.2f} Lacs' if isinstance(diagnosis, (int, float)) else diagnosis)
-
-        if __name__ == '__main__':
-            main()
-
-
+        
 
 # Function for Feedback Page
 def feedback_page():
