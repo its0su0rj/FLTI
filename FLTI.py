@@ -8,12 +8,8 @@ from nltk.corpus import stopwords
 import numpy as np
 from PIL import Image
 import pickle
-        
+
 from streamlit_option_menu import option_menu
-
-
-
-
 
 
 def predict_salary(loaded_model, input_features):
@@ -28,20 +24,18 @@ def predict_salary(loaded_model, input_features):
     input_features = np.array(input_features).reshape(1, -1)
 
     # Predict the salary using the loaded model
-    predicted_salary = loaded_model.predict(input_features)[0]
+    predicted_salary = loaded_model_salary.predict(input_features)[0]
 
     return predicted_salary
 
 
-       
 def diabetes_prediction(input_data):
-    
     loaded_model_diabetes = pickle.load(open('trained_model.sav', 'rb'))
 
-        # changing the input_data to numpy array
+    # changing the input_data to numpy array
     input_data_as_numpy_array = np.asarray(input_data)
 
-        # reshape the array as we are predicting for one instance
+    # reshape the array as we are predicting for one instance
     input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
 
     prediction = loaded_model_diabetes.predict(input_data_reshaped)
@@ -52,37 +46,29 @@ def diabetes_prediction(input_data):
         return 'The person is diabetic'
 
 
-        
-
-        # Load the trained k-NN model and scaler
-model = joblib.load('admission_probability_model.joblib')
+# Load the trained k-NN model and scaler
+model_knn = joblib.load('admission_probability_model.joblib')
 scaler = joblib.load('scaler.joblib')
 
-        
+# Load the trained model for image compression
+model_image_compression = joblib.load('image.joblib')
 
-        # Load the trained model
-model = joblib.load('image.joblib')
+# Load the trained Decision Tree model
+model_decision_tree = joblib.load('decisiontree.joblib')
 
-
-        # Load the trained Decision Tree model
-model = joblib.load('decisiontree.joblib')
-        #model = joblib.load("C:/Users/sujee/Downloads/loanapproval/decisiontree.joblib")   # Replace with the correct path to your trained model
-
-
-
-        # Set the NLTK data path
-        #nltk.data.path.append('C:/Users/sujee/Downloads/nltk_data')
+# Set the NLTK data path
 nltk.data.path.append('nltk_data')
 
-        # Download NLTK resources
+# Download NLTK resources
 nltk.download('stopwords')
 nltk.download('punkt')
 
-        # Load the trained model
-model = joblib.load('email_detection_model.joblib')
+# Load the trained model for email detection
+model_email_detection = joblib.load('email_detection_model.joblib')
 
 
 # Function for ML Model Page
+ 
 def ml_model_page():
     st.title("ML Model Page")
     selected_tab = st.selectbox("Select Model", ["Loan Approval Prediction", "Email Spam Detection", "Image Compression", "College Admission Probability", "Diabetes Prediction", "Salary Prediction"])
@@ -330,6 +316,7 @@ def user_page():
         # Add content for authenticated user
 
 
+
 # Main function
 def main():
     st.set_page_config(page_title="Streamlit Web App", page_icon="🌐", layout="wide")
@@ -350,7 +337,6 @@ def main():
         elif navigation_bar == "Feedback":
             feedback_page()
 
-   
 
 if __name__ == "__main__":
     main()
