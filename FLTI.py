@@ -10,6 +10,11 @@ from PIL import Image
 import pickle
 
 from streamlit_option_menu import option_menu
+nltk.data.path.append('nltk_data')
+
+# Download NLTK resources
+nltk.download('stopwords')
+nltk.download('punkt')
 
 
 def predict_salary(loaded_model, input_features):
@@ -46,32 +51,78 @@ def diabetes_prediction(input_data):
         return 'The person is diabetic'
 
 
-# Load the trained k-NN model and scaler
-#model_knn = joblib.load('admission_probability_model.joblib')
-#scaler = joblib.load('scaler.joblib')
 
-# Load the trained model for image compression
-model_image_compression = joblib.load('image.joblib')
+# Function for Loan Approval Prediction
+def loan_approval_prediction(input_data):
+    # Load the trained model for loan approval
+    model_loan_approval = joblib.load('loan_approval_model.joblib')
 
-# Load the trained Decision Tree model
-#model_decision_tree = joblib.load('decisiontree.joblib')
+    # Convert categorical variables to numeric
+    le = LabelEncoder()
+    for column in input_data.keys():
+        if isinstance(input_data[column], str):  # Check if the value is a string
+            input_data[column] = le.fit_transform([input_data[column]])
 
-# Set the NLTK data path
-nltk.data.path.append('nltk_data')
+    # Create a DataFrame with the input data
+    input_df = pd.DataFrame(input_data)
 
-# Download NLTK resources
-nltk.download('stopwords')
-nltk.download('punkt')
+    # Make predictions using the trained model
+    predicted_loan_status = model_loan_approval.predict(input_df)
 
-# Load the trained model for email detection
-model_email_detection = joblib.load('email_detection_model.joblib')
+    return predicted_loan_status
 
 
-# Function for ML Model Page
- 
+# Function for Email Spam Detection
+def email_spam_detection(input_text):
+    # Load the trained model for email detection
+    model_email_detection = joblib.load('email_detection_model.joblib')
+
+    # Make prediction using the loaded model
+    prediction = model_email_detection.predict([input_text])
+
+    return prediction
+
+
+# Function for Image Compression
+def image_compression(input_image):
+    # Load the trained model for image compression
+    model_image_compression = joblib.load('image_compression_model.joblib')
+
+    # Preprocess the image
+    input_image = np.array(input_image)
+    pixels = input_image.reshape(-1, 3)
+
+    # Make predictions on the input data
+    compressed_pixels = model_image_compression.cluster_centers_[model_image_compression.labels_]
+    compressed_image = compressed_pixels.reshape(input_image.shape)
+
+    return compressed_image
+
+
+# Function for College Admission Probability
+def college_admission_probability(input_data):
+    # Load the trained model for college admission probability
+    model_college_admission = joblib.load('college_admission_model.joblib')
+    scaler = joblib.load('scaler.joblib')
+    # Standardize the features using the same scaler used during training
+    input_data_scaled = scaler.transform(input_data)
+
+    # Make predictions using the trained model
+    predicted_admission_probability = model_college_admission.predict(input_data_scaled)
+
+    return predicted_admission_probability[0]
+
+
+# ... (previous code)
+
+
+# Modify the ml_model_page function to include the new functions
+
+
 def ml_model_page():
     st.title("ML Model Page")
     selected_tab = st.selectbox("Select Model", ["Loan Approval Prediction", "Email Spam Detection", "Image Compression", "College Admission Probability", "Diabetes Prediction", "Salary Prediction"])
+
 
     if selected_tab == "Loan Approval Prediction":
         st.write("You are on the Loan Approval Prediction page.")
@@ -95,17 +146,41 @@ def ml_model_page():
         credit_history = st.selectbox("Credit History", [1, 0])
         property_area = st.selectbox("Property Area", ["Urban", "Semiurban", "Rural"])
 
-        
+        # Create a DataFrame with the input data
+        new_input = {
+            'Gender': [gender],
+            'Married': [married],
+            'Dependents': [dependents],
+            'Education': [education],
+            'Self_Employed': [self_employed],
+            'ApplicantIncome': [applicant_income],
+            'CoapplicantIncome': [coapplicant_income],
+            'LoanAmount': [loan_amount],
+            'Loan_Amount_Term': [loan_amount_term],
+            'Credit_History': [credit_history],
+            'Property_Area': [property_area],
+        }
+
+        # Convert categorical variables to numeric
+        le = LabelEncoder()
+        for column in new_input.keys():
+            if isinstance(new_input[column][0], str):  # Check if the value is a string
+                new_input[column] = le.fit_transform(new_input[column])
+
+        # Create a DataFrame with the new input data
+        new_input_df = pd.DataFrame(new_input)
+
+        # Make predictions using the loan approval model
+        predicted_loan_status = loan_approval_prediction(new_input)
+
         # Display the predicted loan status
         if st.button("Predict Loan Approval Status"):
-            st.write("loading soon")
+            if predicted_loan_status[0] == 1:
+                st.success("Congratulations! Your loan is approved.")
+            else:
+                st.error("Sorry, your loan is not approved.")
 
     elif selected_tab == "Email Spam Detection":
-        st.write("You are on the Email Spam Detection page.")
-        # Add specific content for Email Spam Detection
-        #email spam prediction model
-        
-        # Streamlit UI
         st.title("Email Spam Detection")
 
         # Input for user to enter an email
@@ -113,8 +188,8 @@ def ml_model_page():
 
         # Button to trigger prediction
         if st.button("Check Spam"):
-            # Make prediction using the loaded model
-            prediction = model.predict([user_input])
+            # Make prediction using the email spam detection model
+            prediction = email_spam_detection(user_input)
 
             # Display result
             if prediction[0] == 1:
@@ -122,15 +197,8 @@ def ml_model_page():
             else:
                 st.success("This email is not classified as spam.")
 
-
     elif selected_tab == "Image Compression":
-        st.write("You are on the Image Compression page.")
-        # Add specific content for Image Compression
-        #image compression model
-        
-
-        # Title
-        st.title('Image Compression')
+        st.title("Image Compression")
 
         # User input for image upload
         uploaded_file = st.file_uploader("Choose an image...", type="jpg")
@@ -138,18 +206,13 @@ def ml_model_page():
         if uploaded_file is not None:
             # Load and preprocess the image
             image = Image.open(uploaded_file)
-            image = np.array(image)
-            pixels = image.reshape(-1, 3)
 
             # Make predictions on the input data
-            compressed_pixels = model.cluster_centers_[model.labels_]
-            compressed_image = compressed_pixels.reshape(image.shape)
+            compressed_image = image_compression(image)
 
             # Display the original and compressed images
-            st.image(image, caption='Original Image', use_column_width=True)
-            st.image(compressed_image, caption='Compressed Image', use_column_width=True)
-
-
+            st.image(image, caption="Original Image", use_column_width=True)
+            st.image(compressed_image, caption="Compressed Image", use_column_width=True)
     elif selected_tab == "College Admission Probability":
         st.write("You are on the College Admission Probability page.")
         # Add specific content for College Admission Probability
@@ -170,12 +233,29 @@ def ml_model_page():
         living_facilities = st.number_input("Enter Living Facilities (1 to 10):", min_value=1, max_value=10, step=1)
         girls_boys_ratio_percentage = st.number_input("Enter Girls/Boys Ratio Percentage (1 to 100):", min_value=1, max_value=100, step=1)
 
-       
-        # Button to trigger prediction
+        # Create a DataFrame with the input data
+        new_data = {
+            'All_India_Rank': [all_india_rank],
+            'NIRF_Ranking': [nirf_ranking],
+            'Placement_Percentage': [placement_percentage],
+            'Median_Placement_Package': [median_placement_package],
+            'Distance_from_College': [distance_from_college],
+            'Government_Funded': [1 if government_funded else 0],
+            'Teachers_Qualification': [teachers_qualification],
+            'College_Fee': [college_fee],
+            'Living_Facilities': [living_facilities],
+            'Girls_Boys_Ratio_Percentage': [girls_boys_ratio_percentage],
+        }
+     # Create a DataFrame with the input data
+        input_df = pd.DataFrame(new_data)
+
+        # Make predictions using the college admission probability model
+        predicted_admission_probability = college_admission_probability(input_df)
+
+        # Display the predicted admission probability
         if st.button("Percentage Probability to Join the College"):
-            # Make predictions using the trained model
-            st.write("it will predict soon")
-            
+            st.write(f"Predicted Admission Probability: {predicted_admission_probability:.2%}")
+
 
     elif selected_tab == "Diabetes Prediction":
         st.write("You are on the Diabetes Prediction page.")
@@ -290,3 +370,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+# ... (remaining code)
